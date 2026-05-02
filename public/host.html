@@ -4,35 +4,78 @@
   <meta charset="UTF-8">
   <title>Host Panel</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; text-align: center; background: #1a1a2e; color: white; }
-    button { color: white; padding: 16px 40px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin: 10px; }
-    .pick { background: #e94560; font-size: 22px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; text-align: center; background: #1a1a2e; color: white; padding: 20px; }
+    .card { background: #16213e; padding: 30px; border-radius: 16px; }
+    h1 { font-size: 28px; margin-bottom: 6px; }
+    .count { font-size: 16px; color: #aaa; margin: 16px 0; }
+    .row { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+    label { font-size: 16px; color: #ccc; }
+    select {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      background: #0f3460;
+      color: white;
+    }
+    button { color: white; padding: 14px 28px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 6px; }
+    .pick { background: #e94560; font-size: 20px; width: 100%; margin-top: 10px; }
     .pick:hover { background: #c73652; }
     .view { background: #6c63ff; }
     .view:hover { background: #574fd6; }
-    .reset { background: #444; font-size: 14px; padding: 10px 20px; }
+    .reset { background: #444; font-size: 13px; padding: 8px 18px; }
     .reset:hover { background: #666; }
-    #winner { margin-top: 30px; font-size: 32px; font-weight: bold; color: #f5a623; }
-    #players { margin-top: 20px; text-align: left; background: #16213e; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; }
+    #winners { margin-top: 24px; }
+    .winner-card {
+      background: #0f3460;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin: 10px 0;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .winner-number { font-size: 28px; font-weight: bold; color: #f5a623; }
+    .winner-name { color: white; font-size: 18px; }
+    #players { margin-top: 20px; text-align: left; background: #0f3460; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; display: none; }
     .player-row { padding: 8px 0; border-bottom: 1px solid #333; font-size: 14px; }
-    .card { background: #16213e; padding: 30px; border-radius: 16px; }
-    .count { font-size: 16px; color: #aaa; margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>🎯 Host Panel</h1>
-    <div class="count" id="count">Loading players...</div>
-    <button class="pick" onclick="pickWinner()">🎲 Pick Random Winner</button>
-    <button class="view" onclick="loadPlayers()">👥 View All Players</button>
-    <br/>
-    <button class="reset" onclick="resetAll()">🗑️ Reset All Data</button>
-    <div id="winner"></div>
+    <div class="count" id="count">Loading...</div>
+
+    <div class="row">
+      <label>Players to call on stage:</label>
+      <select id="pickCount">
+        <option value="1">1 player</option>
+        <option value="2">2 players</option>
+        <option value="3">3 players</option>
+        <option value="4">4 players</option>
+        <option value="5" selected>5 players</option>
+        <option value="6">6 players</option>
+        <option value="7">7 players</option>
+        <option value="8">8 players</option>
+        <option value="9">9 players</option>
+        <option value="10">10 players</option>
+      </select>
+    </div>
+
+    <button class="pick" onclick="pickPlayers()">🎲 Pick Random Players</button>
+
+    <div class="row" style="margin-top:16px;">
+      <button class="view" onclick="togglePlayers()">👥 View All Players</button>
+      <button class="reset" onclick="resetAll()">🗑️ Reset All Data</button>
+    </div>
+
+    <div id="winners"></div>
     <div id="players"></div>
   </div>
 
   <script>
-    // Load count on page open
     loadCount();
 
     async function loadCount() {
@@ -41,35 +84,53 @@
       document.getElementById('count').textContent = `👥 ${data.length} players registered`;
     }
 
-    async function pickWinner() {
-      document.getElementById('winner').innerHTML = '🎲 Picking...';
-      const res = await fetch('/pick');
+    async function pickPlayers() {
+      const count = document.getElementById('pickCount').value;
+      document.getElementById('winners').innerHTML = '<p style="color:#aaa">🎲 Picking...</p>';
+      const res = await fetch(`/pick?count=${count}`);
       const data = await res.json();
-      if (data.number) {
-        document.getElementById('winner').innerHTML = `
-          🏆 Winner!<br>#${data.number} — <strong>${data.name}</strong>
-        `;
-      } else {
-        document.getElementById('winner').innerHTML = '❌ No players registered yet!';
+
+      if (!Array.isArray(data) || data.length === 0) {
+        document.getElementById('winners').innerHTML = '<p style="color:red">❌ No players registered yet!</p>';
+        return;
       }
+
+      document.getElementById('winners').innerHTML = `
+        <p style="color:#aaa; margin-bottom:10px;">🏆 ${data.length} player(s) selected:</p>
+        ${data.map((p, i) => `
+          <div class="winner-card">
+            <span style="color:#aaa">#${i + 1}</span>
+            <span class="winner-number">${p.number}</span>
+            <span class="winner-name">${p.name}</span>
+          </div>
+        `).join('')}
+      `;
     }
 
-    async function loadPlayers() {
+    let playersVisible = false;
+    async function togglePlayers() {
+      const div = document.getElementById('players');
+      if (playersVisible) {
+        div.style.display = 'none';
+        playersVisible = false;
+        return;
+      }
       const res = await fetch('/players');
       const data = await res.json();
-      const div = document.getElementById('players');
+      div.style.display = 'block';
+      playersVisible = true;
       if (data.length === 0) { div.innerHTML = '<p>No players yet.</p>'; return; }
-      div.innerHTML = `<p style="margin-bottom:10px">${data.length} players total</p>` + data.map(p => `
-        <div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>
-      `).join('');
+      div.innerHTML = `<p style="margin-bottom:10px">${data.length} players total</p>` +
+        data.map(p => `<div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>`).join('');
     }
 
     async function resetAll() {
       if (!confirm('Are you sure? This will delete ALL players!')) return;
-      const res = await fetch('/reset', { method: 'DELETE' });
-      const data = await res.json();
-      document.getElementById('winner').innerHTML = '';
+      await fetch('/reset', { method: 'DELETE' });
+      document.getElementById('winners').innerHTML = '';
       document.getElementById('players').innerHTML = '';
+      document.getElementById('players').style.display = 'none';
+      playersVisible = false;
       loadCount();
       alert('✅ All data reset!');
     }

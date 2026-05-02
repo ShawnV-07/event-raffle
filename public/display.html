@@ -52,41 +52,44 @@
   <div id="status">Stand by...</div>
 
   <script>
-    // Poll every 2 seconds for a winner picked by host
-    let lastWinner = null;
+    let lastPick = null;
 
-    async function checkWinner() {
-      try {
-        const res = await fetch('/latest-winner');
-        const data = await res.json();
-        if (data && data.number && data.number !== lastWinner) {
-          lastWinner = data.number;
-          rollAnimation(data);
-        }
-      } catch (e) {}
+async function checkWinner() {
+  try {
+    const res = await fetch('/latest-winner');
+    const data = await res.json();
+    if (data && Array.isArray(data) && data.length > 0) {
+      const key = data.map(p => p.number).join(',');
+      if (key !== lastPick) {
+        lastPick = key;
+        showPlayers(data);
+      }
     }
+  } catch (e) {}
+}
 
-    function rollAnimation(winner) {
-      document.getElementById('status').textContent = '🎲 Picking...';
-      document.getElementById('name').textContent = '';
-      const numberEl = document.getElementById('number');
-      numberEl.classList.add('rolling');
+function showPlayers(players) {
+  const numberEl = document.getElementById('number');
+  const nameEl = document.getElementById('name');
+  document.getElementById('status').textContent = '🎲 Picking...';
+  nameEl.textContent = '';
+  numberEl.classList.add('rolling');
 
-      let count = 0;
-      const interval = setInterval(() => {
-        numberEl.textContent = Math.floor(Math.random() * 9000) + 1000;
-        count++;
-        if (count > 20) {
-          clearInterval(interval);
-          numberEl.classList.remove('rolling');
-          numberEl.textContent = '#' + winner.number;
-          document.getElementById('name').textContent = '🏆 ' + winner.name;
-          document.getElementById('status').textContent = 'Congratulations!';
-        }
-      }, 100);
+  let count = 0;
+  const interval = setInterval(() => {
+    numberEl.textContent = Math.floor(Math.random() * 9000) + 1000;
+    count++;
+    if (count > 20) {
+      clearInterval(interval);
+      numberEl.classList.remove('rolling');
+      numberEl.textContent = players.map(p => '#' + p.number).join('  |  ');
+      nameEl.innerHTML = players.map(p => `🏆 ${p.name}`).join('<br>');
+      document.getElementById('status').textContent = 'Please come on stage!';
     }
+  }, 100);
+}
 
-    setInterval(checkWinner, 2000);
+setInterval(checkWinner, 2000);
   </script>
 </body>
 </html>
