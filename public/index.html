@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Registration</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 100px auto; text-align: center; background: #f0f0f0; }
+    input { display: block; width: 100%; padding: 12px; margin: 10px 0; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+    button { background: #6c63ff; color: white; padding: 14px 30px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; }
+    button:hover { background: #574fd6; }
+    #result { margin-top: 30px; font-size: 24px; font-weight: bold; color: #6c63ff; }
+    .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎉 Event Registration</h1>
+    <p>Enter your details to get your lucky number!</p>
+    <input type="text" id="name" placeholder="Your Full Name" />
+    <input type="date" id="dob" placeholder="Date of Birth" />
+    <button onclick="register()">Get My Number!</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function register() {
+      const name = document.getElementById('name').value;
+      const dob = document.getElementById('dob').value;
+
+      if (!name || !dob) return alert('Please fill in both fields!');
+
+      const res = await fetch('/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, dob })
+      });
+
+      const data = await res.json();
+      if (data.number) {
+        document.getElementById('result').innerHTML = `
+          🎟️ Welcome <strong>${data.name}</strong>!<br>Your lucky number is <strong>#${data.number}</strong>
+        `;
+      } else {
+        document.getElementById('result').innerHTML = '❌ Something went wrong, try again.';
+      }
+    }
+  </script>
+</body>
+</html>

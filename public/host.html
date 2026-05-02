@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; text-align: center; background: #1a1a2e; color: white; }
+    button { background: #e94560; color: white; padding: 16px 40px; border: none; border-radius: 8px; font-size: 20px; cursor: pointer; margin: 10px; }
+    button:hover { background: #c73652; }
+    #winner { margin-top: 30px; font-size: 32px; font-weight: bold; color: #f5a623; }
+    #players { margin-top: 20px; text-align: left; background: #16213e; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; }
+    .player-row { padding: 8px 0; border-bottom: 1px solid #333; font-size: 14px; }
+    .card { background: #16213e; padding: 30px; border-radius: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎯 Host Panel</h1>
+    <button onclick="pickWinner()">🎲 Pick Random Winner</button>
+    <button onclick="loadPlayers()">👥 View All Players</button>
+    <div id="winner"></div>
+    <div id="players"></div>
+  </div>
+
+  <script>
+    async function pickWinner() {
+      document.getElementById('winner').innerHTML = '🎲 Picking...';
+      const res = await fetch('/pick');
+      const data = await res.json();
+      if (data.number) {
+        document.getElementById('winner').innerHTML = `
+          🏆 Winner!<br>#${data.number} — <strong>${data.name}</strong>
+        `;
+      } else {
+        document.getElementById('winner').innerHTML = '❌ No players registered yet!';
+      }
+    }
+
+    async function loadPlayers() {
+      const res = await fetch('/players');
+      const data = await res.json();
+      const div = document.getElementById('players');
+      if (data.length === 0) { div.innerHTML = '<p>No players yet.</p>'; return; }
+      div.innerHTML = data.map(p => `
+        <div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
