@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lucky Draw</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    h1 { font-size: 48px; margin-bottom: 10px; }
+    .subtitle { color: #aaa; font-size: 20px; margin-bottom: 60px; }
+    #number {
+      font-size: 120px;
+      font-weight: bold;
+      color: #f5a623;
+      min-height: 160px;
+      letter-spacing: 10px;
+    }
+    #name {
+      font-size: 36px;
+      color: #6c63ff;
+      margin-top: 20px;
+      min-height: 50px;
+    }
+    #status {
+      margin-top: 40px;
+      font-size: 18px;
+      color: #aaa;
+    }
+    .rolling { animation: pulse 0.1s infinite; }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎰 Lucky Draw</h1>
+  <p class="subtitle">Waiting for host to pick a winner...</p>
+  <div id="number">????</div>
+  <div id="name"></div>
+  <div id="status">Stand by...</div>
+
+  <script>
+    // Poll every 2 seconds for a winner picked by host
+    let lastWinner = null;
+
+    async function checkWinner() {
+      try {
+        const res = await fetch('/latest-winner');
+        const data = await res.json();
+        if (data && data.number && data.number !== lastWinner) {
+          lastWinner = data.number;
+          rollAnimation(data);
+        }
+      } catch (e) {}
+    }
+
+    function rollAnimation(winner) {
+      document.getElementById('status').textContent = '🎲 Picking...';
+      document.getElementById('name').textContent = '';
+      const numberEl = document.getElementById('number');
+      numberEl.classList.add('rolling');
+
+      let count = 0;
+      const interval = setInterval(() => {
+        numberEl.textContent = Math.floor(Math.random() * 9000) + 1000;
+        count++;
+        if (count > 20) {
+          clearInterval(interval);
+          numberEl.classList.remove('rolling');
+          numberEl.textContent = '#' + winner.number;
+          document.getElementById('name').textContent = '🏆 ' + winner.name;
+          document.getElementById('status').textContent = 'Congratulations!';
+        }
+      }, 100);
+    }
+
+    setInterval(checkWinner, 2000);
+  </script>
+</body>
+</html>

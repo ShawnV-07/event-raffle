@@ -55,4 +55,37 @@ app.get('/players', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// Reset all players (for testing)
+app.delete('/reset', async (req, res) => {
+  const { error } = await supabase.from('players').delete().neq('id', 0);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ message: 'All players deleted' });
+});
+
+// Store latest winner in memory
+let latestWinner = null;
+
+// Update pick route to save latest winner
+app.get('/pick', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .eq('registered', true);
+
+    if (error) return res.status(500).json({ error: error.message });
+    if (data.length === 0) return res.status(404).json({ error: 'No players yet' });
+
+    const winner = data[Math.floor(Math.random() * data.length)];
+    latestWinner = winner; // Save for display page
+    res.json(winner);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/latest-winner', (req, res) => {
+  if (!latestWinner) return res.json({});
+  res.json(latestWinner);
+});
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

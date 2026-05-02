@@ -2,28 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Host Panel</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; text-align: center; background: #1a1a2e; color: white; }
-    button { background: #e94560; color: white; padding: 16px 40px; border: none; border-radius: 8px; font-size: 20px; cursor: pointer; margin: 10px; }
-    button:hover { background: #c73652; }
+    button { color: white; padding: 16px 40px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin: 10px; }
+    .pick { background: #e94560; font-size: 22px; }
+    .pick:hover { background: #c73652; }
+    .view { background: #6c63ff; }
+    .view:hover { background: #574fd6; }
+    .reset { background: #444; font-size: 14px; padding: 10px 20px; }
+    .reset:hover { background: #666; }
     #winner { margin-top: 30px; font-size: 32px; font-weight: bold; color: #f5a623; }
     #players { margin-top: 20px; text-align: left; background: #16213e; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; }
     .player-row { padding: 8px 0; border-bottom: 1px solid #333; font-size: 14px; }
     .card { background: #16213e; padding: 30px; border-radius: 16px; }
+    .count { font-size: 16px; color: #aaa; margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>🎯 Host Panel</h1>
-    <button onclick="pickWinner()">🎲 Pick Random Winner</button>
-    <button onclick="loadPlayers()">👥 View All Players</button>
+    <div class="count" id="count">Loading players...</div>
+    <button class="pick" onclick="pickWinner()">🎲 Pick Random Winner</button>
+    <button class="view" onclick="loadPlayers()">👥 View All Players</button>
+    <br/>
+    <button class="reset" onclick="resetAll()">🗑️ Reset All Data</button>
     <div id="winner"></div>
     <div id="players"></div>
   </div>
 
   <script>
+    // Load count on page open
+    loadCount();
+
+    async function loadCount() {
+      const res = await fetch('/players');
+      const data = await res.json();
+      document.getElementById('count').textContent = `👥 ${data.length} players registered`;
+    }
+
     async function pickWinner() {
       document.getElementById('winner').innerHTML = '🎲 Picking...';
       const res = await fetch('/pick');
@@ -42,9 +59,19 @@
       const data = await res.json();
       const div = document.getElementById('players');
       if (data.length === 0) { div.innerHTML = '<p>No players yet.</p>'; return; }
-      div.innerHTML = data.map(p => `
+      div.innerHTML = `<p style="margin-bottom:10px">${data.length} players total</p>` + data.map(p => `
         <div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>
       `).join('');
+    }
+
+    async function resetAll() {
+      if (!confirm('Are you sure? This will delete ALL players!')) return;
+      const res = await fetch('/reset', { method: 'DELETE' });
+      const data = await res.json();
+      document.getElementById('winner').innerHTML = '';
+      document.getElementById('players').innerHTML = '';
+      loadCount();
+      alert('✅ All data reset!');
     }
   </script>
 </body>
