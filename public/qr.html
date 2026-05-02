@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scan to Register</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    h1 { font-size: 48px; margin-bottom: 10px; }
+    p { font-size: 24px; color: #aaa; margin-bottom: 40px; }
+    #qrcode canvas { border-radius: 16px; }
+    .url { margin-top: 30px; font-size: 20px; color: #6c63ff; }
+  </style>
+</head>
+<body>
+  <h1>🎉 Join the Event!</h1>
+  <p>Scan the QR code to register and get your lucky number</p>
+  <div id="qrcode"></div>
+  <div class="url" id="urltext"></div>
+
+  <script>
+    const url = "https://event-raffle.onrender.com";
+    document.getElementById('urltext').innerText = url;
+    new QRCode(document.getElementById("qrcode"), {
+      text: url,
+      width: 300,
+      height: 300,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+    });
+  </script>
+</body>
+</html>
