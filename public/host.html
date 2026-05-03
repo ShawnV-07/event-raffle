@@ -75,36 +75,45 @@
     <div id="players"></div>
   </div>
 
-  <script>
+<script>
     loadCount();
 
     async function loadCount() {
-      const res = await fetch('/players');
-      const data = await res.json();
-      document.getElementById('count').textContent = `👥 ${data.length} players registered`;
+      try {
+        const res = await fetch('/players');
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        document.getElementById('count').textContent = `👥 ${data.length} players registered`;
+      } catch (err) {
+        document.getElementById('count').textContent = '⚠️ Server waking up... refresh in 30 seconds';
+      }
     }
 
     async function pickPlayers() {
       const count = document.getElementById('pickCount').value;
       document.getElementById('winners').innerHTML = '<p style="color:#aaa">🎲 Picking...</p>';
-      const res = await fetch(`/pick?count=${count}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/pick?count=${count}`);
+        const data = await res.json();
 
-      if (!Array.isArray(data) || data.length === 0) {
-        document.getElementById('winners').innerHTML = '<p style="color:red">❌ No players registered yet!</p>';
-        return;
+        if (!Array.isArray(data) || data.length === 0) {
+          document.getElementById('winners').innerHTML = '<p style="color:red">❌ No players registered yet!</p>';
+          return;
+        }
+
+        document.getElementById('winners').innerHTML = `
+          <p style="color:#aaa; margin-bottom:10px;">🏆 ${data.length} player(s) selected:</p>
+          ${data.map((p, i) => `
+            <div class="winner-card">
+              <span style="color:#aaa">#${i + 1}</span>
+              <span class="winner-number">${p.number}</span>
+              <span class="winner-name">${p.name}</span>
+            </div>
+          `).join('')}
+        `;
+      } catch (err) {
+        document.getElementById('winners').innerHTML = '<p style="color:red">❌ Connection error, try again.</p>';
       }
-
-      document.getElementById('winners').innerHTML = `
-        <p style="color:#aaa; margin-bottom:10px;">🏆 ${data.length} player(s) selected:</p>
-        ${data.map((p, i) => `
-          <div class="winner-card">
-            <span style="color:#aaa">#${i + 1}</span>
-            <span class="winner-number">${p.number}</span>
-            <span class="winner-name">${p.name}</span>
-          </div>
-        `).join('')}
-      `;
     }
 
     let playersVisible = false;
@@ -115,31 +124,37 @@
         playersVisible = false;
         return;
       }
-      const res = await fetch('/players');
-      const data = await res.json();
-      div.style.display = 'block';
-      playersVisible = true;
-      if (data.length === 0) { div.innerHTML = '<p>No players yet.</p>'; return; }
-      div.innerHTML = `<p style="margin-bottom:10px">${data.length} players total</p>` +
-        data.map(p => `<div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>`).join('');
+      try {
+        const res = await fetch('/players');
+        const data = await res.json();
+        div.style.display = 'block';
+        playersVisible = true;
+        if (data.length === 0) { div.innerHTML = '<p>No players yet.</p>'; return; }
+        div.innerHTML = `<p style="margin-bottom:10px">${data.length} players total</p>` +
+          data.map(p => `<div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>`).join('');
+      } catch (err) {
+        document.getElementById('players').innerHTML = '<p style="color:red">❌ Connection error, try again.</p>';
+        document.getElementById('players').style.display = 'block';
+        playersVisible = true;
+      }
     }
 
     async function resetAll() {
-  if (!confirm('Are you sure? This will delete ALL players!')) return;
-  try {
-    const res = await fetch('/reset', { method: 'DELETE' });
-    const data = await res.json();
-    if (data.error) { alert('Error: ' + data.error); return; }
-    document.getElementById('winners').innerHTML = '';
-    document.getElementById('players').innerHTML = '';
-    document.getElementById('players').style.display = 'none';
-    playersVisible = false;
-    loadCount();
-    alert('✅ All data reset!');
-  } catch (err) {
-    alert('❌ Reset failed: ' + err.message);
-  }
-}
+      if (!confirm('Are you sure? This will delete ALL players!')) return;
+      try {
+        const res = await fetch('/reset', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.error) { alert('Error: ' + data.error); return; }
+        document.getElementById('winners').innerHTML = '';
+        document.getElementById('players').innerHTML = '';
+        document.getElementById('players').style.display = 'none';
+        playersVisible = false;
+        loadCount();
+        alert('✅ All data reset!');
+      } catch (err) {
+        alert('❌ Reset failed: ' + err.message);
+      }
+    }
   </script>
 </body>
 </html>
