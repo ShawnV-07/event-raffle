@@ -10,7 +10,16 @@ app.use(express.static('public'));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Generate a unique number not already in the database
+const TEAMS = ['Red', 'Yellow', 'Green', 'Blue', 'Purple'];
+const TEAM_COLORS = {
+  Red: '#e94560',
+  Yellow: '#f5a623',
+  Green: '#2ecc71',
+  Blue: '#3498db',
+  Purple: '#9b59b6'
+};
+
+// Generate a unique number
 async function getUniqueNumber() {
   let attempts = 0;
   while (attempts < 20) {
@@ -25,22 +34,32 @@ async function getUniqueNumber() {
   throw new Error('Could not generate unique number');
 }
 
+// Get next team based on even distribution
+async function getNextTeam() {
+  const { data } = await supabase
+    .from('players')
+    .select('team');
+  
+  const counts = {};
+  TEAMS.forEach(t => counts[t] = 0);
+  if (data) data.forEach(p => { if (p.team) counts[p.team]++; });
+  
+  // Pick team with lowest count
+  return TEAMS.reduce((a, b) => counts[a] <= counts[b] ? a : b);
+}
+
 // Player joins
 app.post('/join', async (req, res) => {
   try {
     const { name, dob } = req.body;
-    console.log('Join request received:', { name, dob });
-
-    if (!name || !dob) {
-      return res.status(400).json({ error: 'Name and DOB are required' });
-    }
+    if (!name || !dob) return res.status(400).json({ error: 'Name and DOB are required' });
 
     const number = await getUniqueNumber();
-    console.log('Generated number:', number);
+    const team = await getNextTeam();
 
     const { data, error } = await supabase
       .from('players')
-      .insert([{ number, name, dob, registered: true }])
+      .insert([{ number, name, dob, registered: true, team }])
       .select();
 
     if (error) {
@@ -48,29 +67,28 @@ app.post('/join', async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    console.log('Player registered:', data[0]);
-    res.json({ number: data[0].number, name: data[0].name });
-
+    res.json({ number: data[0].number, name: data[0].name, team: data[0].team, color: TEAM_COLORS[data[0].team] });
   } catch (err) {
     console.log('Server error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Store latest pick in memory
+// Store latest pick
 let latestPick = null;
 
-// Pick multiple random players
+// Pick random players (optionally filter by team)
 app.get('/pick', async (req, res) => {
   try {
     const count = parseInt(req.query.count) || 1;
-    const { data, error } = await supabase
-      .from('players')
-      .select('*')
-      .eq('registered', true);
+    const team = req.query.team || null;
 
+    let query = supabase.from('players').select('*').eq('registered', true);
+    if (team && team !== 'All') query = query.eq('team', team);
+
+    const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });
-    if (data.length === 0) return res.status(404).json({ error: 'No players yet' });
+    if (data.length === 0) return res.status(404).json({ error: 'No players found' });
 
     const shuffled = data.sort(() => Math.random() - 0.5);
     const picked = shuffled.slice(0, Math.min(count, data.length));
@@ -81,7 +99,7 @@ app.get('/pick', async (req, res) => {
   }
 });
 
-// Get latest pick for display page
+// Latest pick for display page
 app.get('/latest-winner', (req, res) => {
   if (!latestPick) return res.json([]);
   res.json(latestPick);
@@ -110,6 +128,5 @@ app.delete('/reset', async (req, res) => {
   }
 });
 
-// Always last!
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

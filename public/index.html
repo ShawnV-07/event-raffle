@@ -29,12 +29,20 @@
     .field { margin-bottom: 16px; text-align: left; }
     label { display: block; font-size: 14px; font-weight: bold; color: #444; margin-bottom: 6px; }
     input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
-    button { color: white; padding: 14px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 8px; }
-    .main-btn { background: #6c63ff; }
-    .main-btn:hover { background: #574fd6; }
+    button { color: white; padding: 14px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 8px; background: #6c63ff; }
+    button:hover { background: #574fd6; }
+    #result { margin-top: 24px; line-height: 1.8; }
+    .team-badge {
+      display: inline-block;
+      padding: 8px 24px;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      margin-top: 10px;
+    }
+    .lucky-number { font-size: 48px; font-weight: bold; margin: 10px 0; }
     .clear-btn { background: none; color: #aaa; font-size: 13px; margin-top: 16px; text-decoration: underline; cursor: pointer; border: none; width: auto; padding: 4px; }
-    #result { margin-top: 24px; font-size: 22px; font-weight: bold; color: #6c63ff; line-height: 1.6; }
-    .error { color: red; margin-top: 16px; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -52,7 +60,7 @@
       <input type="date" id="dob" />
     </div>
 
-    <button class="main-btn" onclick="register()">Get My Lucky Number 🎉</button>
+    <button onclick="register()">Get My Lucky Number 🎉</button>
     <div id="result"></div>
   </div>
 
@@ -62,15 +70,11 @@
       const p = JSON.parse(saved);
       document.getElementById('card').innerHTML = `
         <h1>🎟️ Already Registered!</h1>
-        <p style="margin-top:16px; color:#888;">You already have a lucky number.</p>
-        <div style="margin-top:24px; font-size:28px; font-weight:bold; color:#6c63ff;">
-          #${p.number}<br>
-          <span style="font-size:18px;">${p.name}</span>
-        </div>
-        <button class="clear-btn" onclick="clearRegistration()" 
-          style="background:none;color:#aaa;font-size:13px;margin-top:24px;text-decoration:underline;cursor:pointer;border:none;">
-          ❌ Not me / Clear registration
-        </button>
+        <p style="margin-top:12px; color:#888;">Your lucky number is</p>
+        <div class="lucky-number" style="color:${p.color}">${p.number}</div>
+        <div class="team-badge" style="background:${p.color}">Team ${p.team}</div>
+        <br/>
+        <button class="clear-btn" onclick="clearRegistration()">❌ Not me / Clear</button>
       `;
     }
 
@@ -98,19 +102,20 @@
         const data = await res.json();
 
         if (data.number) {
-          localStorage.setItem('registered', JSON.stringify({ number: data.number, name: data.name }));
+          localStorage.setItem('registered', JSON.stringify({ number: data.number, name: data.name, team: data.team, color: data.color }));
           document.getElementById('result').innerHTML = `
-            🎉 Welcome <strong>${data.name}</strong>!<br>
-            Your lucky number is <strong>#${data.number}</strong>
+            <p>🎉 Welcome <strong>${data.name}</strong>!</p>
+            <div class="lucky-number" style="color:${data.color}">${data.number}</div>
+            <div class="team-badge" style="background:${data.color}">Team ${data.team}</div>
           `;
           btn.style.display = 'none';
         } else {
-          document.getElementById('result').innerHTML = `<div class="error">❌ ${data.error || 'Something went wrong, try again.'}</div>`;
+          document.getElementById('result').innerHTML = `<p style="color:red">❌ ${data.error || 'Something went wrong'}</p>`;
           btn.disabled = false;
           btn.textContent = 'Get My Lucky Number 🎉';
         }
       } catch (err) {
-        document.getElementById('result').innerHTML = `<div class="error">❌ Connection error, try again.</div>`;
+        document.getElementById('result').innerHTML = `<p style="color:red">❌ Connection error, try again.</p>`;
         btn.disabled = false;
         btn.textContent = 'Get My Lucky Number 🎉';
       }

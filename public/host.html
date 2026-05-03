@@ -5,68 +5,64 @@
   <title>Host Panel</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; text-align: center; background: #1a1a2e; color: white; padding: 20px; }
+    body { font-family: Arial, sans-serif; max-width: 650px; margin: 40px auto; text-align: center; background: #1a1a2e; color: white; padding: 20px; }
     .card { background: #16213e; padding: 30px; border-radius: 16px; }
     h1 { font-size: 28px; margin-bottom: 6px; }
-    .count { font-size: 16px; color: #aaa; margin: 16px 0; }
-    .row { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
-    label { font-size: 16px; color: #ccc; }
-    select {
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-      background: #0f3460;
-      color: white;
-    }
-    button { color: white; padding: 14px 28px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 6px; }
-    .pick { background: #e94560; font-size: 20px; width: 100%; margin-top: 10px; }
+    .count { font-size: 15px; color: #aaa; margin: 12px 0; }
+    .team-counts { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .team-pill { padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; color: white; }
+    .row { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+    label { font-size: 15px; color: #ccc; }
+    select { padding: 10px 14px; border-radius: 8px; border: none; font-size: 15px; background: #0f3460; color: white; }
+    button { color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; margin: 5px; }
+    .pick { background: #e94560; font-size: 20px; width: 100%; margin-top: 10px; padding: 16px; }
     .pick:hover { background: #c73652; }
     .view { background: #6c63ff; }
-    .view:hover { background: #574fd6; }
-    .reset { background: #444; font-size: 13px; padding: 8px 18px; }
-    .reset:hover { background: #666; }
-    #winners { margin-top: 24px; }
-    .winner-card {
-      background: #0f3460;
-      border-radius: 12px;
-      padding: 14px 20px;
-      margin: 10px 0;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .winner-number { font-size: 28px; font-weight: bold; color: #f5a623; }
-    .winner-name { color: white; font-size: 18px; }
-    #players { margin-top: 20px; text-align: left; background: #0f3460; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; display: none; }
-    .player-row { padding: 8px 0; border-bottom: 1px solid #333; font-size: 14px; }
+    .reset { background: #444; font-size: 13px; padding: 8px 16px; }
+    #winners { margin-top: 20px; }
+    .winner-card { border-radius: 12px; padding: 14px 20px; margin: 8px 0; display: flex; align-items: center; justify-content: space-between; }
+    .winner-number { font-size: 28px; font-weight: bold; }
+    .winner-name { font-size: 17px; }
+    .winner-team { font-size: 13px; opacity: 0.8; }
+    #players { margin-top: 16px; text-align: left; background: #0f3460; padding: 16px; border-radius: 12px; max-height: 300px; overflow-y: auto; display: none; }
+    .player-row { padding: 8px 0; border-bottom: 1px solid #333; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>🎯 Host Panel</h1>
-    <div class="count" id="count">Loading...</div>
+    <div class="count" id="count">⚠️ Loading...</div>
+    <div class="team-counts" id="teamCounts"></div>
 
     <div class="row">
-      <label>Players to call on stage:</label>
+      <label>Count:</label>
       <select id="pickCount">
-        <option value="1">1 player</option>
-        <option value="2">2 players</option>
-        <option value="3">3 players</option>
-        <option value="4">4 players</option>
-        <option value="5" selected>5 players</option>
-        <option value="6">6 players</option>
-        <option value="7">7 players</option>
-        <option value="8">8 players</option>
-        <option value="9">9 players</option>
-        <option value="10">10 players</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5" selected>5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+      <label>Team:</label>
+      <select id="teamFilter">
+        <option value="All">🌈 All Teams</option>
+        <option value="Red">🔴 Red</option>
+        <option value="Yellow">🟡 Yellow</option>
+        <option value="Green">🟢 Green</option>
+        <option value="Blue">🔵 Blue</option>
+        <option value="Purple">🟣 Purple</option>
       </select>
     </div>
 
     <button class="pick" onclick="pickPlayers()">🎲 Pick Random Players</button>
 
-    <div class="row" style="margin-top:16px;">
+    <div class="row" style="margin-top:14px;">
       <button class="view" onclick="togglePlayers()">👥 View All Players</button>
       <button class="reset" onclick="resetAll()">🗑️ Reset All Data</button>
     </div>
@@ -75,40 +71,55 @@
     <div id="players"></div>
   </div>
 
-<script>
+  <script>
+    const TEAM_COLORS = {
+      Red: '#e94560', Yellow: '#f5a623', Green: '#2ecc71', Blue: '#3498db', Purple: '#9b59b6'
+    };
+
     loadCount();
 
     async function loadCount() {
-  try {
-    const res = await fetch('/players');
-    if (!res.ok) throw new Error('Server error');
-    const data = await res.json();
-    document.getElementById('count').textContent = `👥 ${data.length} players registered`;
-  } catch (err) {
-    document.getElementById('count').textContent = '⚠️ Server waking up... retrying in 10 seconds';
-    setTimeout(loadCount, 10000); // auto retry every 10 seconds
-  }
-}
+      try {
+        const res = await fetch('/players');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        document.getElementById('count').textContent = `👥 ${data.length} players registered`;
+
+        // Team breakdown
+        const counts = { Red: 0, Yellow: 0, Green: 0, Blue: 0, Purple: 0 };
+        data.forEach(p => { if (p.team && counts[p.team] !== undefined) counts[p.team]++; });
+        document.getElementById('teamCounts').innerHTML = Object.entries(counts).map(([team, count]) =>
+          `<span class="team-pill" style="background:${TEAM_COLORS[team]}">${team}: ${count}</span>`
+        ).join('');
+      } catch (err) {
+        document.getElementById('count').textContent = '⚠️ Server waking up... retrying in 10s';
+        setTimeout(loadCount, 10000);
+      }
+    }
 
     async function pickPlayers() {
       const count = document.getElementById('pickCount').value;
+      const team = document.getElementById('teamFilter').value;
       document.getElementById('winners').innerHTML = '<p style="color:#aaa">🎲 Picking...</p>';
       try {
-        const res = await fetch(`/pick?count=${count}`);
+        const res = await fetch(`/pick?count=${count}&team=${team}`);
         const data = await res.json();
 
         if (!Array.isArray(data) || data.length === 0) {
-          document.getElementById('winners').innerHTML = '<p style="color:red">❌ No players registered yet!</p>';
+          document.getElementById('winners').innerHTML = '<p style="color:red">❌ No players found!</p>';
           return;
         }
 
         document.getElementById('winners').innerHTML = `
           <p style="color:#aaa; margin-bottom:10px;">🏆 ${data.length} player(s) selected:</p>
           ${data.map((p, i) => `
-            <div class="winner-card">
-              <span style="color:#aaa">#${i + 1}</span>
-              <span class="winner-number">${p.number}</span>
-              <span class="winner-name">${p.name}</span>
+            <div class="winner-card" style="background:${TEAM_COLORS[p.team]}22; border: 2px solid ${TEAM_COLORS[p.team]}">
+              <span style="color:#aaa; font-size:13px">#${i + 1}</span>
+              <span class="winner-number" style="color:${TEAM_COLORS[p.team]}">${p.number}</span>
+              <div>
+                <div class="winner-name">${p.name}</div>
+                <div class="winner-team">Team ${p.team}</div>
+              </div>
             </div>
           `).join('')}
         `;
@@ -132,9 +143,14 @@
         playersVisible = true;
         if (data.length === 0) { div.innerHTML = '<p>No players yet.</p>'; return; }
         div.innerHTML = `<p style="margin-bottom:10px">${data.length} players total</p>` +
-          data.map(p => `<div class="player-row">🎟️ #${p.number} — ${p.name} (DOB: ${p.dob})</div>`).join('');
+          data.map(p => `
+            <div class="player-row">
+              <span class="dot" style="background:${TEAM_COLORS[p.team] || '#aaa'}"></span>
+              🎟️ #${p.number} — ${p.name} — <strong>${p.team || 'No team'}</strong>
+            </div>
+          `).join('');
       } catch (err) {
-        document.getElementById('players').innerHTML = '<p style="color:red">❌ Connection error, try again.</p>';
+        document.getElementById('players').innerHTML = '<p style="color:red">❌ Error loading players.</p>';
         document.getElementById('players').style.display = 'block';
         playersVisible = true;
       }
@@ -149,6 +165,7 @@
         document.getElementById('winners').innerHTML = '';
         document.getElementById('players').innerHTML = '';
         document.getElementById('players').style.display = 'none';
+        document.getElementById('teamCounts').innerHTML = '';
         playersVisible = false;
         loadCount();
         alert('✅ All data reset!');
