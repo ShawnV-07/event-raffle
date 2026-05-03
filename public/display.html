@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lucky Draw</title>
+  <title>Player Selection</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -30,6 +30,7 @@
       color: #6c63ff;
       margin-top: 20px;
       min-height: 50px;
+      line-height: 1.6;
     }
     #status {
       margin-top: 40px;
@@ -45,51 +46,61 @@
   </style>
 </head>
 <body>
-  <h1>🎰 Lucky Draw</h1>
-  <p class="subtitle">Waiting for host to pick a winner...</p>
+  <h1>🎉 Player Selection</h1>
+  <p class="subtitle">Waiting for host to call someone on stage...</p>
   <div id="number">????</div>
   <div id="name"></div>
   <div id="status">Stand by...</div>
 
   <script>
+    const TEAM_COLORS = {
+      Red: '#e94560',
+      Yellow: '#f5a623',
+      Green: '#2ecc71',
+      Blue: '#3498db',
+      Purple: '#9b59b6'
+    };
+
     let lastPick = null;
 
-async function checkWinner() {
-  try {
-    const res = await fetch('/latest-winner');
-    const data = await res.json();
-    if (data && Array.isArray(data) && data.length > 0) {
-      const key = data.map(p => p.number).join(',');
-      if (key !== lastPick) {
-        lastPick = key;
-        showPlayers(data);
-      }
+    async function checkWinner() {
+      try {
+        const res = await fetch('/latest-winner');
+        const data = await res.json();
+        if (data && Array.isArray(data) && data.length > 0) {
+          const key = data.map(p => p.number).join(',');
+          if (key !== lastPick) {
+            lastPick = key;
+            showPlayers(data);
+          }
+        }
+      } catch (e) {}
     }
-  } catch (e) {}
-}
 
-function showPlayers(players) {
-  const numberEl = document.getElementById('number');
-  const nameEl = document.getElementById('name');
-  document.getElementById('status').textContent = '🎲 Picking...';
-  nameEl.textContent = '';
-  numberEl.classList.add('rolling');
+    function showPlayers(players) {
+      const numberEl = document.getElementById('number');
+      const nameEl = document.getElementById('name');
+      document.getElementById('status').textContent = '🎲 Picking...';
+      nameEl.textContent = '';
+      numberEl.classList.add('rolling');
 
-  let count = 0;
-  const interval = setInterval(() => {
-    numberEl.textContent = Math.floor(Math.random() * 9000) + 1000;
-    count++;
-    if (count > 20) {
-      clearInterval(interval);
-      numberEl.classList.remove('rolling');
-      numberEl.textContent = players.map(p => '#' + p.number).join('  |  ');
-      nameEl.innerHTML = players.map(p => `🏆 ${p.name}`).join('<br>');
-      document.getElementById('status').textContent = 'Please come on stage!';
+      let count = 0;
+      const interval = setInterval(() => {
+        numberEl.textContent = Math.floor(Math.random() * 9000) + 1000;
+        count++;
+        if (count > 20) {
+          clearInterval(interval);
+          numberEl.classList.remove('rolling');
+          numberEl.textContent = players.map(p => '#' + p.number).join('  |  ');
+          nameEl.innerHTML = players.map(p =>
+            `<span style="color:${TEAM_COLORS[p.team] || '#6c63ff'}">${p.name} — Team ${p.team}</span>`
+          ).join('<br>');
+          document.getElementById('status').textContent = 'Please make your way to the stage! 🎤';
+        }
+      }, 100);
     }
-  }, 100);
-}
 
-setInterval(checkWinner, 2000);
+    setInterval(checkWinner, 2000);
   </script>
 </body>
 </html>
