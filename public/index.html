@@ -27,38 +27,18 @@
     h1 { font-size: 24px; margin-bottom: 6px; }
     .subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
     .field { margin-bottom: 16px; text-align: left; }
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: bold;
-      color: #444;
-      margin-bottom: 6px;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    button {
-      background: #6c63ff;
-      color: white;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 8px;
-    }
-    button:hover { background: #574fd6; }
+    label { display: block; font-size: 14px; font-weight: bold; color: #444; margin-bottom: 6px; }
+    input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+    button { color: white; padding: 14px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 8px; }
+    .main-btn { background: #6c63ff; }
+    .main-btn:hover { background: #574fd6; }
+    .clear-btn { background: none; color: #aaa; font-size: 13px; margin-top: 16px; text-decoration: underline; cursor: pointer; border: none; width: auto; padding: 4px; }
     #result { margin-top: 24px; font-size: 22px; font-weight: bold; color: #6c63ff; line-height: 1.6; }
     .error { color: red; margin-top: 16px; font-size: 15px; }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="card">
     <h1>🎟️ Get Your Lucky Number!</h1>
     <p class="subtitle">Enter your details below to join the draw</p>
 
@@ -72,54 +52,65 @@
       <input type="date" id="dob" />
     </div>
 
-    <button onclick="register()">Get My Lucky Number 🎉</button>
-
+    <button class="main-btn" onclick="register()">Get My Lucky Number 🎉</button>
     <div id="result"></div>
   </div>
 
   <script>
-    // Prevent duplicate entries from same device
-    if (localStorage.getItem('registered')) {
-      const saved = JSON.parse(localStorage.getItem('registered'));
-      document.querySelector('.card').innerHTML = `
+    const saved = localStorage.getItem('registered');
+    if (saved) {
+      const p = JSON.parse(saved);
+      document.getElementById('card').innerHTML = `
         <h1>🎟️ Already Registered!</h1>
         <p style="margin-top:16px; color:#888;">You already have a lucky number.</p>
         <div style="margin-top:24px; font-size:28px; font-weight:bold; color:#6c63ff;">
-          #${saved.number}<br>
-          <span style="font-size:18px;">${saved.name}</span>
+          #${p.number}<br>
+          <span style="font-size:18px;">${p.name}</span>
         </div>
+        <button class="clear-btn" onclick="clearRegistration()" 
+          style="background:none;color:#aaa;font-size:13px;margin-top:24px;text-decoration:underline;cursor:pointer;border:none;">
+          ❌ Not me / Clear registration
+        </button>
       `;
+    }
+
+    function clearRegistration() {
+      localStorage.removeItem('registered');
+      location.reload();
     }
 
     async function register() {
       const name = document.getElementById('name').value.trim();
       const dob = document.getElementById('dob').value;
-
       if (!name || !dob) return alert('Please fill in both fields!');
 
       const btn = document.querySelector('button');
       btn.disabled = true;
       btn.textContent = 'Registering...';
 
-      const res = await fetch('/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, dob })
-      });
+      try {
+        const res = await fetch('/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, dob })
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (data.number) {
-        // Save to localStorage to prevent duplicates
-        localStorage.setItem('registered', JSON.stringify({ number: data.number, name: data.name }));
-
-        document.getElementById('result').innerHTML = `
-          🎉 Welcome <strong>${data.name}</strong>!<br>
-          Your lucky number is <strong>#${data.number}</strong>
-        `;
-        btn.style.display = 'none';
-      } else {
-        document.getElementById('result').innerHTML = `<div class="error">❌ Something went wrong, try again.</div>`;
+        if (data.number) {
+          localStorage.setItem('registered', JSON.stringify({ number: data.number, name: data.name }));
+          document.getElementById('result').innerHTML = `
+            🎉 Welcome <strong>${data.name}</strong>!<br>
+            Your lucky number is <strong>#${data.number}</strong>
+          `;
+          btn.style.display = 'none';
+        } else {
+          document.getElementById('result').innerHTML = `<div class="error">❌ ${data.error || 'Something went wrong, try again.'}</div>`;
+          btn.disabled = false;
+          btn.textContent = 'Get My Lucky Number 🎉';
+        }
+      } catch (err) {
+        document.getElementById('result').innerHTML = `<div class="error">❌ Connection error, try again.</div>`;
         btn.disabled = false;
         btn.textContent = 'Get My Lucky Number 🎉';
       }

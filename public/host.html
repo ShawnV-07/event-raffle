@@ -125,15 +125,21 @@
     }
 
     async function resetAll() {
-      if (!confirm('Are you sure? This will delete ALL players!')) return;
-      await fetch('/reset', { method: 'DELETE' });
-      document.getElementById('winners').innerHTML = '';
-      document.getElementById('players').innerHTML = '';
-      document.getElementById('players').style.display = 'none';
-      playersVisible = false;
-      loadCount();
-      alert('✅ All data reset!');
-    }
+  if (!confirm('Are you sure? This will delete ALL players!')) return;
+  try {
+    const res = await fetch('/reset', { method: 'DELETE' });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+    document.getElementById('winners').innerHTML = '';
+    document.getElementById('players').innerHTML = '';
+    document.getElementById('players').style.display = 'none';
+    playersVisible = false;
+    loadCount();
+    alert('✅ All data reset!');
+  } catch (err) {
+    alert('❌ Reset failed: ' + err.message);
+  }
+}
   </script>
 </body>
 </html>
