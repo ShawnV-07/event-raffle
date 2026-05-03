@@ -79,15 +79,16 @@
     loadCount();
 
     async function loadCount() {
-      try {
-        const res = await fetch('/players');
-        if (!res.ok) throw new Error('Server error');
-        const data = await res.json();
-        document.getElementById('count').textContent = `👥 ${data.length} players registered`;
-      } catch (err) {
-        document.getElementById('count').textContent = '⚠️ Server waking up... refresh in 30 seconds';
-      }
-    }
+  try {
+    const res = await fetch('/players');
+    if (!res.ok) throw new Error('Server error');
+    const data = await res.json();
+    document.getElementById('count').textContent = `👥 ${data.length} players registered`;
+  } catch (err) {
+    document.getElementById('count').textContent = '⚠️ Server waking up... retrying in 10 seconds';
+    setTimeout(loadCount, 10000); // auto retry every 10 seconds
+  }
+}
 
     async function pickPlayers() {
       const count = document.getElementById('pickCount').value;
